@@ -1,0 +1,43 @@
+library(deSolve)
+## Hodkin-Huxley model
+HH = function(times, init, parms) {
+    with(as.list(c(init, parms)),{
+ 
+      alpha_n= function(v) {0.01*(v+55)/(1-exp(-0.1*(v+55)))}
+      beta_n= function(v) {0.125*exp(-0.0125*(v+65))}
+      
+      alpha_m= function(v) {0.1*(v+40)/(1-exp(-0.1*(v+40)))}
+      beta_m= function(v) {4*exp(-0.0556*(v+65))}
+      
+      alpha_h= function(v) {0.07*exp(-0.05*(v+65))}
+      beta_h= function(v) {1/(1+exp(-0.1*(v+35)))}
+      
+      tau_n = function(v) {1/(alpha_n(v)+beta_n(v))}
+      tau_m = function(v) {1/(alpha_m(v) + beta_m(v))}
+      tau_h = function(v) {1/(alpha_h(v) + beta_h(v))}
+      
+      n_inf = function(v) {alpha_n(v)/(alpha_n(v)+beta_n(v))}
+      m_inf = function(v) {alpha_m(v)/(alpha_m(v)+beta_m(v))}
+      h_inf = function(v) {alpha_h(v)/(alpha_h(v)+beta_h(v))}
+      
+      Im = gL*(v-E_L) + gK*(v-E_K)*n^4 + gNa*h*(v-E_Na)*m^3
+
+      
+      dv_dt= (Ie_A-Im)/cm
+      dn_dt= (n_inf(v)-n)/tau_n(v)
+      dm_dt= (m_inf(v)-m)/tau_m(v)
+      dh_dt= (h_inf(v)-h)/tau_h(v)
+      
+      
+      return(list(c(dv_dt, dn_dt, dm_dt, dh_dt )))
+    })
+  }
+ 
+parms = c( cm=10,E_Na=50, E_K=-77, E_L=-54.4, gNa=1200, gK=360, gL=3, Ie_A=200)
+times = seq(0, 40, 0.1)
+init = c(v=-65, n=0.3177, m=0.0529, h=0.5961 )
+
+output = ode(y=init,times=times,func=HH,parms=parms)
+plot(output)
+
+
